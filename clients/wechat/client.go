@@ -41,7 +41,30 @@ func (c *weChatClient) Get(fullPath string, param, header map[string]string) (re
 			return
 		}
 	}
+	if param == nil {
+		param = map[string]string{}
+	}
+	param["access_token"] = c.AccessToken
+	return c.HttpClient.Get(fullPath, param, header)
+}
 
+func (c *weChatClient) Post(fullPath string, param, header map[string]string, body map[string]interface{}) (response []byte, err error) {
+	if time.Now().Unix() > c.TokenExpireTime {
+		err = c.Auth()
+		if err != nil {
+			err = errors.WithMessage(err, "auth failed")
+			return
+		}
+	}
+	if param == nil {
+		param = map[string]string{}
+	}
+	param["access_token"] = c.AccessToken
+	if header == nil {
+		header = map[string]string{}
+	}
+	header["Content-Type"] = thttp.ContentJson
+	return c.HttpClient.Post(fullPath, param, header, body)
 }
 
 // 重新获取token
